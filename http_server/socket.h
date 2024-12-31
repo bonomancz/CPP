@@ -18,9 +18,9 @@ class Socket{
 private:
 	WSADATA wsaData;
 	SOCKET serverSocket = INVALID_SOCKET;
-	struct addrinfo* result = NULL;
+	struct addrinfo* result = nullptr;
 	struct addrinfo hints;
-	int serverPort = 8443;
+	int serverPort = 80;
 
 	void initialize();
 	void setup();
@@ -29,10 +29,11 @@ private:
 	void shutdownSock(SOCKET& clientSocket);
 
 public:
-	Socket();
+	void build();
 	SOCKET acceptSock();
 	void receiveSock(SOCKET &clientSocket, string &receivedMessage, std::function<void(SOCKET&, string&)> onMessageReceived);
 	void sendSock(SOCKET& clientSocket, string& sendMessage);
 	string getClientIpAddr(SOCKET &clientSocket);
+	void setServerPort(int serverPort);
 };
 

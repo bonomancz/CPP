@@ -98,3 +98,28 @@ string Data::getClientRequest(string& message) {
 	output = methodPath + ", " + userAgent;
 	return output;
 }
+
+string Data::strip(const string& inputString, string chars) {
+	try {
+		size_t begin = inputString.find_first_not_of(chars);
+		if (begin == std::string::npos) {
+			return "";
+		}
+		size_t end = inputString.find_last_not_of(chars);
+		return inputString.substr(begin, end - begin + 1);
+	}
+	catch (runtime_error rex) {
+		cerr << rex.what() << endl;
+		return "";
+	}
+}
+
+vector<string> Data::split(const string& inputString, char delimiter) {
+	vector<string> output;
+	stringstream ss(inputString);
+	string token;
+	while (getline(ss, token, delimiter)) {
+		output.emplace_back(token);
+	}
+	return output;
+}

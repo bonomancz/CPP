@@ -3,19 +3,19 @@
 
 void Httpd::start() {
 	try {
-		SOCKET clientSocket;
 		while (true) {
 			try {
+				SOCKET clientSocket;
 				if ((clientSocket = sock.acceptSock()) != INVALID_SOCKET) {
-					this->threads.startNewThread([this, &clientSocket]() {
+					this->threads.startNewThread([this, clientSocket]() {
 						this->handleClient(sock, clientSocket);
 					});
-					//this->status();
 					this->threads.removeFinishedThreads();
 				}
 				else {
 					std::this_thread::sleep_for(std::chrono::milliseconds(100)); // busy waiting protection
 				}
+				//this->status();
 			}
 			catch (runtime_error& e) {
 				cerr << "main(): Runtime error: " << e.what() << endl;
@@ -30,6 +30,11 @@ void Httpd::start() {
 	}
 }
 
+void Httpd::initialize() {
+	this->loadConfigParams();
+	sock.setServerPort(stoi(this->config["listen_port"]));
+	sock.build();
+}
 
 void Httpd::stop() {
 	this->threads.removeAllThreads();
@@ -81,5 +86,61 @@ void Httpd::receivedMessageHandler(SOCKET &clientSocket, string &clientMessage) 
 	}
 	catch (...) {
 		cerr << "receivedMessageHandler(): Unknown error occured." << endl;
+	}
+}
+
+vector<string> Httpd::processArguments(int& arg_c, char**& arg_v) {
+	string exceptMessage{ "Missing arguments\nUsage: http_server.exe --config=\"[path to config file]\"" };
+	if (arg_c < 2) {
+		throw runtime_error(exceptMessage);
+	}
+	string configFile = string(arg_v[1]);
+	size_t configPosition = configFile.find("--config=");
+	if (configPosition == string::npos) {
+		throw runtime_error(exceptMessage);
+	}
+	vector<string> arguments;
+	for (int i = 1; i < arg_c; i++) {
+		string arg = arg_v[i];
+		size_t pos = arg.find("=") + 1;
+		arg = arg.substr(pos);
+		arguments.push_back(arg);
+	}
+	return arguments;
+}
+
+void Httpd::setServerConfigFile(string& configFile) {
+	this->configFileName = configFile;
+}
+
+
+void Httpd::loadConfigParams() {
+	try {
+		ifstream fin(this->configFileName);
+		if (!fin.is_open()) {
+			throw runtime_error("Unable to open config file " + this->configFileName);
+		}
+		stringstream buffer;
+		buffer << fin.rdbuf();
+		fin.close();
+		string newLine, key, space, value;
+		while (getline(buffer, newLine)) {
+			if (newLine.find("#") != std::string::npos) {
+				continue;
+			}
+			istringstream lineBuffer(newLine);
+			lineBuffer >> key >> value;
+			if (!datas.strip(key, " ").empty() && !datas.strip(value, " ").empty()) {
+				this->config[datas.strip(key, " ")] = datas.strip(value, " ");
+			}
+		}
+		
+		cout << "Config values:" << endl;
+		for (auto& pair : this->config) {
+			cout << pair.first << " :: " << pair.second << endl;
+		}
+	}
+	catch (runtime_error& e) {
+		cerr << "loadConfigParams(): Exception: " << e.what() << endl;
 	}
 }

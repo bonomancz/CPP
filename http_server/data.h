@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <list>
 #include <regex>
@@ -16,5 +17,7 @@ public:
 	bool isExistingUrl(string &message);
 	string getRequestUrl(string &message);
 	string getClientRequest(string& message);
+	string strip(const string& inputString, string chars);
+	vector<string> split(const string& inputString, char delimiter);
 };
 

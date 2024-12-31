@@ -1,6 +1,6 @@
 #include "socket.h"
 
-Socket::Socket() {
+void Socket::build() {
     this->initialize();
     this->setup();
     this->bindSock();
@@ -126,4 +126,8 @@ string Socket::getClientIpAddr(SOCKET& clientSocket) {
         output = string(clientIP);
     }
     return output;
+}
+
+void Socket::setServerPort(int serverPort) {
+    this->serverPort = serverPort;
 }
